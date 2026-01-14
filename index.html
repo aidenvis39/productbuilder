@@ -250,6 +250,64 @@
           grid-template-columns: 1fr;
         }
       }
+      .lotto-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .lotto-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+      .lotto-options {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        color: var(--muted);
+        font-family: "Noto Sans KR", sans-serif;
+        font-size: 14px;
+      }
+      .lotto-options label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .lotto-numbers {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .lotto-ball {
+        height: 64px;
+        border-radius: 999px;
+        background: #fbe6b3;
+        border: 2px solid #e7c679;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        font-weight: 700;
+        color: #6b4a17;
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+        animation: reveal 420ms ease forwards;
+      }
+      .lotto-ball.bonus {
+        background: #f8c9b6;
+        border-color: #e59c83;
+        color: #6f2c1b;
+      }
+      .lotto-note {
+        margin: 12px 0 0;
+        font-family: "Noto Sans KR", sans-serif;
+        font-size: 13px;
+        color: var(--muted);
+      }
     </style>
   </head>
   <body>
@@ -360,7 +418,75 @@
             <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
           </noscript>
         </section>
+
+        <section class="card" id="lotto">
+          <h2>로또 번호 추첨</h2>
+          <div class="lotto-controls">
+            <div class="lotto-actions">
+              <button id="drawButton" type="button">추첨하기</button>
+            </div>
+            <div class="lotto-options">
+              <label>
+                <input id="sortToggle" type="checkbox" checked />
+                오름차순 정렬
+              </label>
+              <label>
+                <input id="bonusToggle" type="checkbox" />
+                보너스 번호 포함
+              </label>
+            </div>
+          </div>
+          <div id="numbers" class="lotto-numbers" aria-live="polite"></div>
+          <p class="lotto-note">무작위 추첨 결과는 클라이언트에서만 생성됩니다.</p>
+        </section>
       </main>
     </div>
+    <script>
+      const drawButton = document.getElementById("drawButton");
+      const numbersEl = document.getElementById("numbers");
+      const sortToggle = document.getElementById("sortToggle");
+      const bonusToggle = document.getElementById("bonusToggle");
+
+      function drawNumbers(count) {
+        const pool = Array.from({ length: 45 }, (_, i) => i + 1);
+        for (let i = pool.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        return pool.slice(0, count);
+      }
+
+      function renderNumbers(numbers, bonusIncluded) {
+        numbersEl.innerHTML = "";
+        const main = bonusIncluded ? numbers.slice(0, 6) : numbers;
+        const bonus = bonusIncluded ? numbers[6] : null;
+        const display = sortToggle.checked ? [...main].sort((a, b) => a - b) : main;
+        display.forEach((num, index) => {
+          const ball = document.createElement("div");
+          ball.className = "lotto-ball";
+          ball.style.animationDelay = `${index * 80}ms`;
+          ball.textContent = num;
+          numbersEl.appendChild(ball);
+        });
+        if (bonus !== null) {
+          const ball = document.createElement("div");
+          ball.className = "lotto-ball bonus";
+          ball.style.animationDelay = `${display.length * 80}ms`;
+          ball.textContent = bonus;
+          numbersEl.appendChild(ball);
+        }
+      }
+
+      function handleDraw() {
+        const includeBonus = bonusToggle.checked;
+        const numbers = drawNumbers(includeBonus ? 7 : 6);
+        renderNumbers(numbers, includeBonus);
+      }
+
+      if (drawButton) {
+        drawButton.addEventListener("click", handleDraw);
+        handleDraw();
+      }
+    </script>
   </body>
 </html>
