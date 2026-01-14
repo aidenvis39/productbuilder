@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>로또 번호 추첨기</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        margin: 0;
+        font-family: "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+        background: radial-gradient(circle at top, #fff8e7, #f6f1e6 45%, #e9e3d8);
+        color: #1b1a17;
+      }
+      .wrap {
+        max-width: 840px;
+        margin: 40px auto;
+        padding: 24px;
+      }
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+      h1 {
+        font-size: 32px;
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+      p {
+        margin: 0;
+        color: #4a453f;
+      }
+      .panel {
+        background: #fffdf7;
+        border: 1px solid #e3dccd;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      button {
+        background: #c3582f;
+        color: #fff;
+        border: none;
+        border-radius: 999px;
+        padding: 12px 18px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(195, 88, 47, 0.35);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      .options {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        color: #4a453f;
+        font-size: 14px;
+      }
+      .options label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .numbers {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .ball {
+        height: 64px;
+        border-radius: 999px;
+        background: #ffe9b5;
+        border: 2px solid #e1c477;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        font-weight: 700;
+        color: #6d4d1a;
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+        animation: reveal 420ms ease forwards;
+      }
+      .bonus {
+        background: #ffd1c2;
+        border-color: #f1a48c;
+        color: #7b2f1c;
+      }
+      @keyframes reveal {
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      footer {
+        margin-top: 16px;
+        font-size: 13px;
+        color: #6b6257;
+      }
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 26px;
+        }
+        .ball {
+          height: 56px;
+          font-size: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>로또 번호 추첨기</h1>
+        <p>1부터 45까지의 숫자 중 중복 없이 6개를 뽑습니다.</p>
+      </header>
+      <section class="panel">
+        <div class="controls">
+          <button id="drawButton" type="button">추첨하기</button>
+          <div class="options">
+            <label>
+              <input id="sortToggle" type="checkbox" checked />
+              오름차순 정렬
+            </label>
+            <label>
+              <input id="bonusToggle" type="checkbox" />
+              보너스 번호 포함
+            </label>
+          </div>
+        </div>
+        <div id="numbers" class="numbers" aria-live="polite"></div>
+      </section>
+      <footer>랜덤 추첨은 클라이언트에서만 동작합니다.</footer>
+    </div>
+    <script>
+      const drawButton = document.getElementById("drawButton");
+      const numbersEl = document.getElementById("numbers");
+      const sortToggle = document.getElementById("sortToggle");
+      const bonusToggle = document.getElementById("bonusToggle");
+
+      function drawNumbers(count) {
+        const pool = Array.from({ length: 45 }, (_, i) => i + 1);
+        for (let i = pool.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        return pool.slice(0, count);
+      }
+
+      function renderNumbers(numbers, bonusIncluded) {
+        numbersEl.innerHTML = "";
+        const main = bonusIncluded ? numbers.slice(0, 6) : numbers;
+        const bonus = bonusIncluded ? numbers[6] : null;
+        const display = sortToggle.checked ? [...main].sort((a, b) => a - b) : main;
+        display.forEach((num, index) => {
+          const ball = document.createElement("div");
+          ball.className = "ball";
+          ball.style.animationDelay = `${index * 80}ms`;
+          ball.textContent = num;
+          numbersEl.appendChild(ball);
+        });
+        if (bonus !== null) {
+          const ball = document.createElement("div");
+          ball.className = "ball bonus";
+          ball.style.animationDelay = `${display.length * 80}ms`;
+          ball.textContent = bonus;
+          numbersEl.appendChild(ball);
+        }
+      }
+
+      function handleDraw() {
+        const includeBonus = bonusToggle.checked;
+        const numbers = drawNumbers(includeBonus ? 7 : 6);
+        renderNumbers(numbers, includeBonus);
+      }
+
+      drawButton.addEventListener("click", handleDraw);
+      handleDraw();
+    </script>
+  </body>
+</html>
