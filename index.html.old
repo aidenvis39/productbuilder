@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>로또 번호 추첨기</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg-light: #f8f9fa;
+        --bg-dark: #121212;
+        --panel-light: #ffffff;
+        --panel-dark: #1e1e1e;
+        --border-light: #e9ecef;
+        --border-dark: #333333;
+        --text-light: #212529;
+        --text-dark: #f8f9fa;
+        --muted-light: #6c757d;
+        --muted-dark: #adb5bd;
+        --primary: #6366f1;
+        --primary-hover: #4f46e5;
+        --shadow-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-dark: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.18);
+        --ball-gradient: linear-gradient(145deg, #ffffff, #f0f0f0);
+        --ball-shadow: 5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff;
+      }
+
+      [data-theme="dark"] {
+        --bg: var(--bg-dark);
+        --panel: var(--panel-dark);
+        --border: var(--border-dark);
+        --text: var(--text-dark);
+        --muted: var(--muted-dark);
+        --shadow: var(--shadow-dark);
+      }
+
+      [data-theme="light"] {
+        --bg: var(--bg-light);
+        --panel: var(--panel-light);
+        --border: var(--border-light);
+        --text: var(--text-light);
+        --muted: var(--muted-light);
+        --shadow: var(--shadow-light);
+      }
+
+      body {
+        margin: 0;
+        font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+        transition: background 0.3s ease, color 0.3s ease;
+      }
+
+      .wrap {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 8px;
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 32px;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .panel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+
+      h2 {
+        font-size: 20px;
+        font-weight: 600;
+        margin-top: 0;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      h2::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 20px;
+        background: var(--primary);
+        border-radius: 2px;
+      }
+
+      /* Controls */
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      button.primary-btn {
+        flex: 1;
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      button.primary-btn:hover {
+        background: var(--primary-hover);
+      }
+
+      .theme-toggle {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 14px;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .options {
+        display: flex;
+        gap: 20px;
+        color: var(--muted);
+        font-size: 14px;
+        justify-content: center;
+      }
+      
+      .options label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--primary);
+      }
+
+      /* Numbers */
+      .numbers {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 32px;
+        min-height: 60px;
+      }
+
+      .ball {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--panel);
+        border: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 18px;
+        color: var(--text);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        opacity: 0;
+        transform: scale(0.5);
+      }
+
+      .ball.bonus {
+        border-color: #ef4444;
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.05);
+      }
+      
+      .ball:nth-child(1) { animation-delay: 0.0s; }
+      .ball:nth-child(2) { animation-delay: 0.1s; }
+      .ball:nth-child(3) { animation-delay: 0.2s; }
+      .ball:nth-child(4) { animation-delay: 0.3s; }
+      .ball:nth-child(5) { animation-delay: 0.4s; }
+      .ball:nth-child(6) { animation-delay: 0.5s; }
+      .ball:nth-child(7) { animation-delay: 0.6s; }
+
+      @keyframes popIn {
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* Comments */
+      .comment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .comment-item {
+        background: rgba(0,0,0,0.02);
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+      }
+      
+      .comment-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      
+      .comment-text {
+        font-size: 15px;
+        margin: 0;
+      }
+
+      .input-group {
+        display: flex;
+        gap: 10px;
+      }
+      
+      input[type="text"], input[type="email"], textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+      
+      input:focus, textarea:focus {
+        outline: 2px solid var(--primary);
+        border-color: transparent;
+      }
+      
+      textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+
+      /* Form Grid */
+      .form-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      footer {
+        text-align: center;
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: auto;
+        padding-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Lotto Gen</h1>
+      </header>
+
+      <!-- 1. Lotto Section (Top) -->
+      <section class="panel">
+        <h2>로또 번호 추첨</h2>
+        <div class="controls">
+          <div class="numbers" id="numbers"></div>
+          
+          <div class="actions">
+            <button id="drawButton" class="primary-btn" type="button">번호 생성하기</button>
+            <button id="themeToggle" class="theme-toggle" type="button" aria-label="테마 변경">
+              ◐
+            </button>
+          </div>
+          
+          <div class="options">
+            <label>
+              <input id="sortToggle" type="checkbox" checked />
+              번호 정렬
+            </label>
+            <label>
+              <input id="bonusToggle" type="checkbox" />
+              보너스볼
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Comment Section -->
+      <section class="panel">
+        <h2>실시간 댓글</h2>
+        <div class="comment-list" id="commentList">
+          <!-- Placeholder comments -->
+          <div class="comment-item">
+            <div class="comment-header">
+              <span>익명123</span>
+              <span>1분 전</span>
+            </div>
+            <p class="comment-text">오늘 1등 가즈아~!!</p>
+          </div>
+          <div class="comment-item">
+            <div class="comment-header">
+              <span>행운가득</span>
+              <span>5분 전</span>
+            </div>
+            <p class="comment-text">좋은 기운 받아갑니다.</p>
+          </div>
+        </div>
+        <div class="input-group">
+          <input type="text" placeholder="응원의 한마디를 남겨주세요..." />
+          <button class="primary-btn" style="flex: 0 0 80px;">등록</button>
+        </div>
+      </section>
+
+      <!-- 3. Partnership Inquiry Section -->
+      <section class="panel">
+        <h2>제휴 및 문의</h2>
+        <form class="form-grid" onsubmit="event.preventDefault(); alert('문의가 접수되었습니다.');">
+          <div>
+            <input type="text" placeholder="담당자 성함" required />
+          </div>
+          <div>
+            <input type="email" placeholder="이메일 주소" required />
+          </div>
+          <div>
+            <textarea placeholder="문의하실 내용을 입력해주세요." required></textarea>
+          </div>
+          <button type="submit" class="primary-btn">문의하기</button>
+        </form>
+      </section>
+
+      <footer>
+        &copy; 2024 Lotto Gen. All rights reserved.
+      </footer>
+    </div>
+
+    <script>
+      // Lotto Logic
+      const drawButton = document.getElementById("drawButton");
+      const numbersEl = document.getElementById("numbers");
+      const sortToggle = document.getElementById("sortToggle");
+      const bonusToggle = document.getElementById("bonusToggle");
+      const themeToggle = document.getElementById("themeToggle");
+      const root = document.documentElement;
+
+      function setTheme(theme) {
+        root.setAttribute("data-theme", theme);
+        localStorage.setItem("lotto-theme", theme);
+      }
+
+      const storedTheme = localStorage.getItem("lotto-theme");
+      if (storedTheme) {
+        setTheme(storedTheme);
+      } else {
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        setTheme(prefersDark ? "dark" : "light");
+      }
+
+      themeToggle.addEventListener("click", () => {
+        const current = root.getAttribute("data-theme");
+        setTheme(current === "dark" ? "light" : "dark");
+      });
+
+      function drawNumbers(count) {
+        const pool = Array.from({ length: 45 }, (_, i) => i + 1);
+        for (let i = pool.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        return pool.slice(0, count);
+      }
+
+      function renderNumbers(numbers, bonusIncluded) {
+        numbersEl.innerHTML = "";
+        const main = bonusIncluded ? numbers.slice(0, 6) : numbers;
+        const bonus = bonusIncluded ? numbers[6] : null;
+        const display = sortToggle.checked ? [...main].sort((a, b) => a - b) : main;
+        
+        display.forEach((num, index) => {
+          const ball = document.createElement("div");
+          ball.className = "ball";
+          ball.textContent = num;
+          // Color coding based on typical Lotto colors
+          if (num <= 10) ball.style.borderColor = "#fbc400"; // Yellow
+          else if (num <= 20) ball.style.borderColor = "#69c8f2"; // Blue
+          else if (num <= 30) ball.style.borderColor = "#ff7272"; // Red
+          else if (num <= 40) ball.style.borderColor = "#aaa"; // Gray
+          else ball.style.borderColor = "#b0d840"; // Green
+          
+          numbersEl.appendChild(ball);
+        });
+
+        if (bonus !== null) {
+          const ball = document.createElement("div");
+          ball.className = "ball bonus";
+          ball.textContent = bonus;
+          numbersEl.appendChild(ball);
+        }
+      }
+
+      function handleDraw() {
+        const includeBonus = bonusToggle.checked;
+        const numbers = drawNumbers(includeBonus ? 7 : 6);
+        renderNumbers(numbers, includeBonus);
+      }
+
+      drawButton.addEventListener("click", handleDraw);
+      
+      // Initial draw
+      handleDraw();
+    </script>
+  </body>
+</html>
