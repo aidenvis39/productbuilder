@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import LottoGenerator from './components/LottoGenerator';
 import CommentSection from './components/CommentSection';
 import InquiryForm from './components/InquiryForm';

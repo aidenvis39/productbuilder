@@ -20,7 +20,7 @@ export default function InquiryForm() {
         <div>
           <textarea placeholder="문의하실 내용을 입력해주세요." required></textarea>
         </div>
-        <button type="submit" classNam="primary-btn">문의하기</button>
+        <button type="submit" className="primary-btn">문의하기</button>
       </form>
     </section>
   );
